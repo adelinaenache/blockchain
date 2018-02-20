@@ -1,6 +1,8 @@
 package main
 
-import "github.com/boltdb/bolt"
+import (
+	"github.com/boltdb/bolt"
+)
 
 const blocksBucket = "blocks"
 const dbFile = "blockchain.db"
@@ -32,7 +34,7 @@ func (bc *Blockchain) AddBlock(data string) {
 
 	err = bc.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
-		err := b.Put(newBlock.Hash, newBlock.SerializeBlock())
+		_ = b.Put(newBlock.Hash, newBlock.SerializeBlock())
 		err = b.Put([]byte("l"), newBlock.Hash)
 		bc.tip = newBlock.Hash
 
@@ -55,7 +57,7 @@ func NewBlockChain() *Blockchain {
 
 		if b == nil {
 			genesis := NewGenesisBlock()
-			b, err := tx.CreateBucket([]byte(blocksBucket))
+			b, _ := tx.CreateBucket([]byte(blocksBucket))
 			err = b.Put(genesis.Hash, genesis.SerializeBlock())
 			err = b.Put([]byte("l"), genesis.Hash)
 
@@ -82,7 +84,7 @@ func (bc *Blockchain) Iterator() *BlockchainIterator {
 func (i *BlockchainIterator) Next() *Block {
 	var block *Block
 
-	err := i.db.View(func(tx *bolt.Tx) error {
+	_ = i.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(blocksBucket))
 		encodedBlock := b.Get(i.currentHash)
 		block = DeserializeBlock(encodedBlock)
@@ -90,7 +92,7 @@ func (i *BlockchainIterator) Next() *Block {
 		return nil
 	})
 
-	i.currentHash = block.Hash
+	i.currentHash = block.PrevBlockHash
 
 	return block
 }
